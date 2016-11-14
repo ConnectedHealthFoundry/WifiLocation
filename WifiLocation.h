@@ -6,7 +6,7 @@
 #include "Client.h"
 
 static const char* DEFAULT_HOST = "us2.unwiredlabs.com";
-static const int DEFAULT_PORT = 443;
+static const int DEFAULT_PORT = 80;
 static const char* ENDPOINT = "/v2/process.php";
 
 typedef struct Location
@@ -32,7 +32,7 @@ class WifiLocation
                 const char* host = DEFAULT_HOST,
                 int port = DEFAULT_PORT);
 
-    Location updateLocation(WifiAP wifis[], int count);
+    Location updateLocation(WifiAP *wifis, int count);
     Location lastKnownLocation(void);
 
   private:
@@ -45,7 +45,7 @@ class WifiLocation
     int connect(void);
     String getHttpCode(String resp);
     void close(void);
-    void quickSort(WifiAP arr[], int left, int right);
+    void quickSort(WifiAP *arr, int left, int right);
 };
 
 #endif

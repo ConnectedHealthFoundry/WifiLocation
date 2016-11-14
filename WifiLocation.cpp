@@ -2,6 +2,7 @@
 
 static const int E_OK = 0;
 static const int E_NOCONNECTION = -1;
+static const int WIFI_MAX = 15;
 
 WifiLocation::WifiLocation(Client* client,
                           const char* token,
@@ -33,7 +34,7 @@ Location WifiLocation::lastKnownLocation(void)
   return _location;
 }
 
-Location WifiLocation::updateLocation(WifiAP wifiAPs[], int count)
+Location WifiLocation::updateLocation(WifiAP *wifiAPs, int count)
 {
   Location newLocation;
   newLocation.address = "N/A";
@@ -43,26 +44,25 @@ Location WifiLocation::updateLocation(WifiAP wifiAPs[], int count)
 
   if(!_client->connected())
   {
-    //return newLocation;
+    if(connect() != E_OK)
+    {
+      _location = newLocation;
+      return _location;
+    }
   }
 
-  if(!connect())
-  {
-    //return newLocation;
-  }
-
-  if(count > 15)
+  if(count > WIFI_MAX)
   {
     quickSort(wifiAPs, 0, count-1);
   }
 
-  DynamicJsonBuffer jsonBuffer;
+  StaticJsonBuffer<2000> jsonBuffer;
   JsonObject& root = jsonBuffer.createObject();
   root["token"] = _token;
   root["address"] = 1;
 
   JsonArray& wifis = root.createNestedArray("wifi");
-  int numWifi = (count > 15) ? 15 : count;
+  int numWifi = (count > WIFI_MAX) ? WIFI_MAX : count;
   for(int i=0; i<numWifi; i++)
   {
     JsonObject& wifi = wifis.createNestedObject();
@@ -128,7 +128,7 @@ String WifiLocation::getHttpCode(String resp)
   return resp.substring(periodIndex + 3, periodIndex + 6);
 }
 
-void WifiLocation::quickSort(WifiAP arr[], int left, int right)
+void WifiLocation::quickSort(WifiAP *arr, int left, int right)
 {
   int i = left, j = right;
   WifiAP tmp;
