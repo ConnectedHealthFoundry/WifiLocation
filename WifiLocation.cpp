@@ -2,7 +2,7 @@
 
 static const int E_OK = 0;
 static const int E_NOCONNECTION = -1;
-static const int WIFI_MAX = 15;
+static const int WIFI_MAX = 10;
 
 WifiLocation::WifiLocation(Client* client,
                           const char* token,
@@ -56,7 +56,7 @@ Location WifiLocation::updateLocation(WifiAP *wifiAPs, int count)
     quickSort(wifiAPs, 0, count-1);
   }
 
-  StaticJsonBuffer<2000> jsonBuffer;
+  StaticJsonBuffer<1800> jsonBuffer;
   JsonObject& root = jsonBuffer.createObject();
   root["token"] = _token;
   root["address"] = 1;
@@ -68,7 +68,6 @@ Location WifiLocation::updateLocation(WifiAP *wifiAPs, int count)
     JsonObject& wifi = wifis.createNestedObject();
     wifi["bssid"] = wifiAPs[i].bssid;
     wifi["rssi"] = wifiAPs[i].rssi;
-    wifi["channel"] = wifiAPs[i].channel;
   }
 
   char buff[root.measureLength() + 1];
@@ -86,16 +85,25 @@ Location WifiLocation::updateLocation(WifiAP *wifiAPs, int count)
   int limit = 0;
   int sendCount = 0;
 
-  _client->print(request);
-  do
+  if(_client->connected())
   {
-    if (_client->connected())
+    _client->print(request);
+
+    do
     {
-      chunk = _client->readStringUntil('\n');
-      response += chunk;
-    }
-    limit++;
-  } while (chunk.length() > 0 && limit < 100);
+      if (_client->connected())
+      {
+        chunk = _client->readStringUntil('\n');
+        response += chunk;
+      }
+      limit++;
+    } while (chunk.length() > 0 && limit < 100);
+  }
+  else
+  {
+    _location = newLocation;
+    return _location;
+  }
   close();
 
   if (response.length() > 12)

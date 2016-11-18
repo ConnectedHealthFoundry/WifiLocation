@@ -21,7 +21,6 @@ typedef struct WifiAP
 {
   String bssid;
   int rssi;
-  int channel;
 } WifiAP;
 
 class WifiLocation
